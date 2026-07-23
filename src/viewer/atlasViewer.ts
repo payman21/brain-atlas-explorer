@@ -20,6 +20,9 @@ const LAYOUTS: Record<LayoutName, SLICE_TYPE> = {
   render: SLICE_TYPE.RENDER,
 }
 
+/** NIfTI intent code marking a volume as a discrete label map. */
+const NIFTI_INTENT_LABEL = 1002
+
 /**
  * The volumetric path: a greyscale anatomical template at volume 0 and a
  * labelled parcellation at volume 1, viewed as orthogonal slices or a 3D
@@ -79,18 +82,35 @@ export class AtlasViewer {
   /**
    * Replace the parcellation layer. Returns the set of label values actually
    * present in the image, which drives reconciliation against the label table.
+   *
+   * `imageData` is the `.img` half of a two-file NIfTI/Analyze pair; for a
+   * single-file `.nii`/`.nii.gz` it is omitted.
    */
-  async loadAtlas(file: File): Promise<Set<number>> {
-    // Each pane owns its own GPU textures, so the image is decoded per pane
-    // rather than shared.
+  async loadAtlas(file: File, imageData?: File): Promise<Set<number>> {
+    // Each pane owns its own GPU textures, so the image is decoded per pane.
     for (const nv of this.panes) {
       if (this.atlasLoaded && nv.volumes.length > 1) nv.removeVolumeByIndex(1)
-      const image = await NVImage.loadFromFile({ file, name: file.name, colormap: 'gray', opacity: 0.75 })
+      const image = await NVImage.loadFromFile({
+        file,
+        name: file.name,
+        colormap: 'gray',
+        opacity: 0.75,
+        urlImgData: imageData ?? null,
+      })
+      // Tag the parcellation as a label volume. NiiVue's own atlases carry
+      // NIFTI_INTENT_LABEL, which routes the 3D render through the label path —
+      // opaque labelled voxels over a transparent background. Files written by
+      // nibabel, SPM or FSL usually leave intent_code at 0, and the render then
+      // ray-casts the volume as continuous intensity, filling its bounding box
+      // as a solid block. The 2D slices colour through the label LUT either way.
+      if (image.hdr) image.hdr.intent_code = NIFTI_INTENT_LABEL
       nv.addVolume(image)
     }
     this.atlasLoaded = true
 
     this.indexVoxels(this.nv.volumes[1])
+    // Rebuild each pane's volume texture so the intent tag takes effect.
+    for (const nv of this.panes) nv.updateGLVolume()
     return new Set(this.voxelCounts.keys())
   }
 
@@ -360,3 +380,4 @@ async function renderAtScale(nv: Niivue, scale: number): Promise<HTMLCanvasEleme
   }
   return out
 }
+

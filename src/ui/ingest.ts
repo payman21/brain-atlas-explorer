@@ -5,8 +5,10 @@
  */
 
 export interface SortedFiles {
-  /** A plain labelled NIfTI volume. */
+  /** A single-file NIfTI, or the `.hdr` of a two-file NIfTI/Analyze pair. */
   volume: File | null
+  /** The `.img` half of a two-file pair, paired with `volume`. */
+  volumeImage: File | null
   /** A sidecar label table (dseg.tsv, LUT, XML, JSON…). */
   labels: File | null
   /** A CIFTI dense label file — self-describing, cortex plus subcortex. */
@@ -15,6 +17,8 @@ export interface SortedFiles {
   gifti: File[]
   /** Surface geometry supplied by the user, overriding the bundled meshes. */
   surfaces: File[]
+  /** A `.hdr` or `.img` dropped without its partner. */
+  incompletePair: string[]
   ignored: string[]
 }
 
@@ -24,18 +28,27 @@ export interface SortedFiles {
 const CIFTI_RE = /\.(dlabel|dscalar|dtseries|plabel|ptseries)\.nii(\.gz)?$/i
 const GIFTI_LABEL_RE = /\.label\.gii$/i
 const SURFACE_RE = /\.surf\.gii$|\.(inflated|midthickness|pial|white|sphere)$/i
-const VOLUME_RE = /\.(nii|nii\.gz|hdr|img|mgz|mgh)$/i
+const NIFTI_RE = /\.(nii|nii\.gz|mgz|mgh)$/i
+const HDR_RE = /\.hdr$/i
+const IMG_RE = /\.img$/i
 const LABEL_RE = /\.(tsv|csv|txt|json|xml|lut|label|ctbl)$/i
 
 export function sortFiles(files: File[]): SortedFiles {
   const sorted: SortedFiles = {
     volume: null,
+    volumeImage: null,
     labels: null,
     cifti: null,
     gifti: [],
     surfaces: [],
+    incompletePair: [],
     ignored: [],
   }
+
+  // Analyze / two-file NIfTI arrives as a .hdr + .img pair that must be loaded
+  // together, so they are collected and matched by basename after the sweep.
+  const headers: File[] = []
+  const images: File[] = []
 
   for (const file of files) {
     const name = file.name.toLowerCase()
@@ -49,7 +62,11 @@ export function sortFiles(files: File[]): SortedFiles {
     } else if (SURFACE_RE.test(name)) {
       if (sorted.surfaces.length < 2) sorted.surfaces.push(file)
       else sorted.ignored.push(file.name)
-    } else if (VOLUME_RE.test(name) || name.endsWith('.gz')) {
+    } else if (HDR_RE.test(name)) {
+      headers.push(file)
+    } else if (IMG_RE.test(name)) {
+      images.push(file)
+    } else if (NIFTI_RE.test(name) || name.endsWith('.gz')) {
       if (!sorted.volume) sorted.volume = file
       else sorted.ignored.push(file.name)
     } else if (LABEL_RE.test(name)) {
@@ -59,7 +76,35 @@ export function sortFiles(files: File[]): SortedFiles {
       sorted.ignored.push(file.name)
     }
   }
+
+  pairHeaderImage(headers, images, sorted)
   return sorted
+}
+
+/** Match `.hdr` to `.img` by basename; report any half left without a partner. */
+function pairHeaderImage(headers: File[], images: File[], sorted: SortedFiles): void {
+  const stem = (f: File) => f.name.toLowerCase().replace(/\.(hdr|img)$/, '')
+  const imageByStem = new Map(images.map((f) => [stem(f), f]))
+  const usedImages = new Set<File>()
+
+  for (const header of headers) {
+    const image = imageByStem.get(stem(header))
+    if (image && !sorted.volume) {
+      // A single-file NIfTI, if also present, already claimed `volume`; the
+      // pair only fills in when nothing else has.
+      sorted.volume = header
+      sorted.volumeImage = image
+      usedImages.add(image)
+    } else if (image) {
+      usedImages.add(image)
+      sorted.ignored.push(header.name, image.name)
+    } else {
+      sorted.incompletePair.push(header.name)
+    }
+  }
+  for (const image of images) {
+    if (!usedImages.has(image)) sorted.incompletePair.push(image.name)
+  }
 }
 
 /** Guess a hemisphere from the HCP-style `.L.` / `.R.` naming convention. */

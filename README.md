@@ -44,7 +44,8 @@ onto the window.
 
 - **Volumetric:** a labelled NIfTI over a bundled MNI152 template, in
   multiplanar, single-slice, or 3D-render layouts. Click a region in the list to
-  centre the crosshair on it.
+  centre the crosshair on it. Single-file (`.nii/.nii.gz`) and two-file
+  (`.hdr`+`.img`) NIfTI/Analyze are both accepted — drop both halves of a pair.
 - **Surface:** CIFTI or GIFTI cortical labels on fs_LR 32k surfaces, shown as
   the conventional four-panel figure, inflated or midthickness, on a dark or
   light background. A shared **Zoom** slider (and **Reset size**) keeps the four
@@ -124,6 +125,11 @@ adjacent label values never receive similar colours.
 
 Dropping a volume with no label table is fine — values are read from the image
 and named `Label N`.
+
+Label volumes are tagged `NIFTI_INTENT_LABEL` on load, so the 3D render draws
+labelled voxels over a transparent background rather than ray-casting the volume
+as a solid block. This matters for volumes written by nibabel, SPM or FSL, which
+usually leave the intent code unset; the slices are unaffected either way.
 
 ### The label-offset problem
 

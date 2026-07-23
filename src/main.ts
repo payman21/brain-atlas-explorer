@@ -140,6 +140,13 @@ async function ingest(files: File[]): Promise<void> {
   if (sorted.ignored.length) {
     pending.push({ kind: 'warn', text: 'Some files were not recognised and were ignored:', details: sorted.ignored })
   }
+  if (sorted.incompletePair.length) {
+    pending.push({
+      kind: 'warn',
+      text: 'A two-file NIfTI/Analyze image needs both halves — drop the .hdr and .img together:',
+      details: sorted.incompletePair,
+    })
+  }
 
   try {
     if (sorted.cifti) {
@@ -154,7 +161,7 @@ async function ingest(files: File[]): Promise<void> {
       await ingestValues(sorted.labels, pending)
     } else if (sorted.volume || sorted.labels) {
       lastSurfaceFiles = []
-      await ingestVolume(sorted.volume, sorted.labels, pending)
+      await ingestVolume(sorted.volume, sorted.volumeImage, sorted.labels, pending)
     } else if (sorted.surfaces.length > 0) {
       pending.push({
         kind: 'warn',
@@ -258,13 +265,20 @@ function round4(v: number): number {
   return Number(v.toPrecision(4))
 }
 
-/** Volumetric path: a labelled NIfTI with an optional sidecar label table. */
-async function ingestVolume(volume: File | null, labels: File | null, pending: Message[]): Promise<void> {
+/** Volumetric path: a labelled NIfTI (single- or two-file) with an optional label table. */
+async function ingestVolume(
+  volume: File | null,
+  volumeImage: File | null,
+  labels: File | null,
+  pending: Message[],
+): Promise<void> {
   surfaceView.clear()
 
   if (volume) {
-    volumeValues = await viewer.loadAtlas(volume)
-    store.update({ atlasName: volume.name, mode: 'volume' })
+    volumeValues = await viewer.loadAtlas(volume, volumeImage ?? undefined)
+    // For a .hdr/.img pair, name the atlas after the shared basename.
+    const name = volumeImage ? volume.name.replace(/\.hdr$/i, '') : volume.name
+    store.update({ atlasName: name, mode: 'volume' })
   }
 
   if (labels) {

@@ -25,12 +25,12 @@
           <div class="ingest-actions">
             <label class="button">
               Choose files
-              <input type="file" id="file-input" multiple accept=".nii,.gz,.tsv,.csv,.txt,.json,.xml,.lut,.label" hidden />
+              <input type="file" id="file-input" multiple accept=".nii,.gz,.hdr,.img,.tsv,.csv,.txt,.json,.xml,.lut,.label" hidden />
             </label>
             <button class="button ghost" id="load-demo">Load AAL demo</button>
           </div>
           <p class="ingest-formats">
-            NIfTI + dseg.tsv / LUT / ITK-SNAP / FSL XML / JSON<br />
+            NIfTI (.nii, or .hdr+.img) + dseg.tsv / LUT / ITK-SNAP / FSL XML / JSON<br />
             CIFTI .dlabel.nii &middot; GIFTI .label.gii
           </p>
         </section>
@@ -186,10 +186,11 @@
             <p>Drag files onto the window, or use <em>Choose files</em>. Two kinds are recognised:</p>
             <ul>
               <li>
-                <strong>Volume</strong> — a labelled NIfTI (<code>.nii/.nii.gz</code>) plus a label
-                table. Tables can be BIDS <code>dseg.tsv</code>, CSV, FreeSurfer LUT, ITK-SNAP,
-                FSL XML, a Connectome Workbench list, or JSON. A volume with no table still opens,
-                with regions named by number.
+                <strong>Volume</strong> — a labelled NIfTI, either single-file
+                (<code>.nii/.nii.gz</code>) or a two-file <code>.hdr</code>+<code>.img</code> pair
+                (drop both), plus a label table. Tables can be BIDS <code>dseg.tsv</code>, CSV,
+                FreeSurfer LUT, ITK-SNAP, FSL XML, a Connectome Workbench list, or JSON. A volume
+                with no table still opens, with regions named by number.
               </li>
               <li>
                 <strong>Surface</strong> — a CIFTI <code>.dlabel.nii</code> or GIFTI
