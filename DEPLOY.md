@@ -18,18 +18,16 @@ on load. Leave them; they are not dead weight.
 
 ## Option A — Cloudflare Pages via GitHub (auto-deploys on push)
 
-1. Create the repo and push:
-   ```bash
-   git remote add origin git@github.com:<you>/brain-atlas-explorer.git
-   git push -u origin main
-   ```
-2. In the Cloudflare dashboard: **Workers & Pages → Create → Pages → Connect to
-   Git**, and pick the repo.
-3. Build settings:
+The repo already lives at **https://github.com/payman21/brain-atlas-explorer**
+(`main`), so only the Cloudflare side is left:
+
+1. In the Cloudflare dashboard: **Workers & Pages → Create → Pages → Connect to
+   Git**, authorise GitHub, and pick `brain-atlas-explorer`.
+2. Build settings:
    - Framework preset: **Vite** (or **None**)
    - Build command: `npm run build`
    - Output directory: `dist`
-4. Save and deploy. You get a `https://<project>.pages.dev` URL, and every push
+3. Save and deploy. You get a `https://<project>.pages.dev` URL, and every push
    to `main` redeploys automatically.
 
 ## Option B — Cloudflare Pages direct upload (no GitHub)
