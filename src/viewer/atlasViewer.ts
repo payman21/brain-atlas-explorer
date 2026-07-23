@@ -186,10 +186,10 @@ export class AtlasViewer {
   }
 
   /**
-   * Swap the background — light for figures, dark for screen. This colours the
-   * 3D render and the canvas surround. Slice tiles keep their black air region,
-   * as slice montages conventionally do in every viewer, so light mode is most
-   * useful with the 3D-render layout or the surface view.
+   * Swap the background — light for figures, dark for screen. Colours the 3D
+   * render and the canvas surround; the caller pairs this with hiding the
+   * template in light mode, since NiiVue draws the template as an opaque
+   * background layer whose air would otherwise frame each slice in black.
    */
   setBackground(mode: 'dark' | 'light'): void {
     this.backgroundDark = mode === 'dark'
