@@ -12,6 +12,7 @@ import { formatScalar, RegionList, type RegionSize } from './ui/regionList.ts'
 import { attachDropzone, hemisphereOf, sortFiles } from './ui/ingest.ts'
 import { hexToRgb, rgbToHex } from './viewer/colors.ts'
 import { cssGradient, getColormap, listColormaps } from './viewer/colormaps.ts'
+import type { Legend } from './viewer/legend.ts'
 import { parseValues, ValueParseError, type ScalarField } from './scalars/values.ts'
 import { buildHeatmap, heatmapRegions, suggestColormap, type Heatmap } from './scalars/heatmap.ts'
 
@@ -238,6 +239,10 @@ function updateScalarUI(active: { scalar: ScalarField; heatmap: Heatmap } | null
   el('colorbar-gradient').style.background = `linear-gradient(to right, ${cssGradient(heatmap.colormap, heatmap.reversed)})`
   el('colorbar-min').textContent = formatScalar(heatmap.min)
   el('colorbar-max').textContent = formatScalar(heatmap.max)
+  el('colorbar-mid').textContent = formatScalar((heatmap.min + heatmap.max) / 2)
+  const title = el('colorbar-title')
+  title.textContent = scalar.name
+  title.title = scalar.name
 
   // The symmetric toggle only means anything for a diverging colormap.
   el('symmetric-wrap').hidden = heatmap.colormap.kind !== 'diverging'
@@ -247,7 +252,6 @@ function updateScalarUI(active: { scalar: ScalarField; heatmap: Heatmap } | null
   const maxInput = el<HTMLInputElement>('range-max')
   if (document.activeElement !== minInput) minInput.value = String(round4(heatmap.min))
   if (document.activeElement !== maxInput) maxInput.value = String(round4(heatmap.max))
-  void scalar
 }
 
 function round4(v: number): number {
@@ -569,10 +573,11 @@ el('export-png').addEventListener('click', async () => {
   const scale = Number(el<HTMLSelectElement>('export-scale').value)
   const { mode, atlasName } = store.get()
 
+  const legend = buildLegend()
   button.disabled = true
   button.textContent = 'Rendering…'
   try {
-    const blob = mode === 'surface' ? await surfaceView.toPng(scale) : await viewer.toPng(scale)
+    const blob = mode === 'surface' ? await surfaceView.toPng(scale, legend) : await viewer.toPng(scale, legend)
     if (!blob) {
       messages.show([{ kind: 'warn', text: 'Nothing to export yet — load a parcellation first.' }])
       return
@@ -587,6 +592,22 @@ el('export-png').addEventListener('click', async () => {
   }
 })
 
+/** A colourbar to bake into the exported figure, or null when not in heatmap mode. */
+function buildLegend(): Legend | null {
+  const { scalar, mode } = store.get()
+  if (!scalar || !heatmap) return null
+  const stops = heatmap.reversed ? [...heatmap.colormap.stops].reverse() : heatmap.colormap.stops
+  return {
+    stops,
+    min: heatmap.min,
+    max: heatmap.max,
+    mid: (heatmap.min + heatmap.max) / 2,
+    title: scalar.name,
+    // The surface path can render on white; the volume sheet is always dark.
+    dark: mode === 'surface' ? surfaceView.isDark : true,
+  }
+}
+
 function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
@@ -595,6 +616,22 @@ function downloadBlob(blob: Blob, filename: string): void {
   link.click()
   URL.revokeObjectURL(url)
 }
+
+// ---------------------------------------------------------------- help
+
+const helpOverlay = el('help-overlay')
+const setHelp = (open: boolean) => {
+  helpOverlay.hidden = !open
+}
+el('help-open').addEventListener('click', () => setHelp(true))
+el('help-close').addEventListener('click', () => setHelp(false))
+// Close on backdrop click (but not clicks inside the modal) and on Escape.
+helpOverlay.addEventListener('click', (e) => {
+  if (e.target === helpOverlay) setHelp(false)
+})
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !helpOverlay.hidden) setHelp(false)
+})
 
 // ---------------------------------------------------------------- readout
 

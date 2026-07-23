@@ -1,5 +1,6 @@
 import { MULTIPLANAR_TYPE, Niivue, NVImage, SLICE_TYPE, SHOW_RENDER } from '@niivue/niivue'
 import type { Region } from '../labels/types.ts'
+import { drawLegend, legendHeight, type Legend } from './legend.ts'
 
 export interface PickResult {
   /** Label value under the crosshair; 0 means background. */
@@ -186,9 +187,10 @@ export class AtlasViewer {
 
   /**
    * Render the visible panes to a PNG at `scale`× their on-screen size, keeping
-   * the on-screen stacking: slices above, render below.
+   * the on-screen stacking: slices above, render below. When a `legend` is
+   * given, a colourbar is drawn beneath so the figure explains its own heatmap.
    */
-  async toPng(scale = 4): Promise<Blob | null> {
+  async toPng(scale = 4, legend: Legend | null = null): Promise<Blob | null> {
     const visible = this.panes.filter((nv) => nv.canvas && (nv.canvas.clientWidth ?? 0) > 0)
     if (visible.length === 0) return null
 
@@ -196,20 +198,22 @@ export class AtlasViewer {
     for (const nv of visible) tiles.push(await renderAtScale(nv, scale))
 
     const width = Math.max(...tiles.map((t) => t.width))
-    const height = tiles.reduce((sum, t) => sum + t.height, 0)
+    const tilesHeight = tiles.reduce((sum, t) => sum + t.height, 0)
+    const legendBand = legend ? legendHeight(width) : 0
     const sheet = document.createElement('canvas')
     sheet.width = width
-    sheet.height = height
+    sheet.height = tilesHeight + legendBand
     const ctx = sheet.getContext('2d')
     if (!ctx) return null
 
     ctx.fillStyle = '#0d1017'
-    ctx.fillRect(0, 0, width, height)
+    ctx.fillRect(0, 0, sheet.width, sheet.height)
     let y = 0
     for (const tile of tiles) {
       ctx.drawImage(tile, Math.round((width - tile.width) / 2), y)
       y += tile.height
     }
+    if (legend) drawLegend(ctx, 0, tilesHeight, width, legendBand, legend)
     return new Promise((resolve) => sheet.toBlob((blob) => resolve(blob), 'image/png'))
   }
 

@@ -1,6 +1,7 @@
 import { Niivue, NVMesh, SLICE_TYPE } from '@niivue/niivue'
 import type { Region } from '../labels/types.ts'
 import type { SurfaceLabels } from '../labels/grayordinates.ts'
+import { drawLegend, legendHeight, type Legend } from './legend.ts'
 
 /** Geometry bundled with the app, keyed by the vertex count it fits. */
 export const BUNDLED_SURFACES: Record<number, Record<'L' | 'R', Record<string, string>>> = {
@@ -296,8 +297,16 @@ export class SurfaceView {
     this.pickHandler = handler
   }
 
+  private backgroundMode: 'dark' | 'light' = 'dark'
+
+  /** Whether the current background is dark, so a legend can pick its ink. */
+  get isDark(): boolean {
+    return this.backgroundMode === 'dark'
+  }
+
   /** Light backgrounds are what journals expect; dark suits screen use. */
   setBackground(mode: 'dark' | 'light'): void {
+    this.backgroundMode = mode
     this.background = mode === 'light' ? [1, 1, 1, 1] : [0.05, 0.06, 0.09, 1]
     this.host.classList.toggle('light', mode === 'light')
     for (const panel of this.panels) {
@@ -314,7 +323,7 @@ export class SurfaceView {
    * resolution — text-free vector-like edges at 4× are clean enough for print.
    * Still a raster image: see the export note in the README.
    */
-  async toPng(scale = 4): Promise<Blob | null> {
+  async toPng(scale = 4, legend: Legend | null = null): Promise<Blob | null> {
     if (this.panels.length === 0) return null
 
     const columns = this.panels.length > 1 ? 2 : 1
@@ -322,10 +331,12 @@ export class SurfaceView {
     const first = this.panels[0].canvas
     const tileWidth = Math.round(first.clientWidth * scale)
     const tileHeight = Math.round(first.clientHeight * scale)
+    const gridWidth = tileWidth * columns
+    const legendBand = legend ? legendHeight(gridWidth) : 0
 
     const sheet = document.createElement('canvas')
-    sheet.width = tileWidth * columns
-    sheet.height = tileHeight * rows
+    sheet.width = gridWidth
+    sheet.height = tileHeight * rows + legendBand
     const ctx = sheet.getContext('2d')
     if (!ctx) return null
 
@@ -354,6 +365,7 @@ export class SurfaceView {
       }
     }
 
+    if (legend) drawLegend(ctx, 0, tileHeight * rows, gridWidth, legendBand, legend)
     return new Promise((resolve) => sheet.toBlob((blob) => resolve(blob), 'image/png'))
   }
 

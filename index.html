@@ -10,7 +10,10 @@
     <div id="app">
       <aside class="panel">
         <header class="panel-head">
-          <h1>Brain Atlas Explorer</h1>
+          <div class="panel-title-row">
+            <h1>Brain Atlas Explorer</h1>
+            <button class="help-button" id="help-open" title="Help" aria-label="Help">?</button>
+          </div>
           <p class="subtitle" id="atlas-name">No parcellation loaded</p>
         </header>
 
@@ -55,6 +58,8 @@
         </section>
 
         <ul class="region-list" id="region-list"></ul>
+
+        <footer class="panel-foot">Created by Payman Roghani · July 2026</footer>
       </aside>
 
       <main class="stage">
@@ -147,8 +152,12 @@
 
         <div class="readout" id="readout">
           <div class="colorbar" id="colorbar" hidden>
+            <span class="colorbar-title" id="colorbar-title"></span>
             <span class="colorbar-min" id="colorbar-min"></span>
-            <span class="colorbar-gradient" id="colorbar-gradient"></span>
+            <span class="colorbar-track">
+              <span class="colorbar-gradient" id="colorbar-gradient"></span>
+              <span class="colorbar-mid" id="colorbar-mid"></span>
+            </span>
             <span class="colorbar-max" id="colorbar-max"></span>
           </div>
           <div class="readout-body" id="readout-body">
@@ -156,6 +165,103 @@
           </div>
         </div>
       </main>
+    </div>
+
+    <div class="help-overlay" id="help-overlay" hidden>
+      <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-heading">
+        <header class="help-modal-head">
+          <h2 id="help-heading">Brain Atlas Explorer — help</h2>
+          <button class="help-close" id="help-close" aria-label="Close">&times;</button>
+        </header>
+        <div class="help-body">
+          <p class="help-lede">
+            Explore a brain parcellation in the browser: view it as slices or on the cortical
+            surface, find and colour regions, drape per-region values as a heatmap, and export
+            publication figures. <strong>Everything runs on your machine — no file you open is
+            ever uploaded.</strong>
+          </p>
+
+          <section>
+            <h3>1 · Load a parcellation</h3>
+            <p>Drag files onto the window, or use <em>Choose files</em>. Two kinds are recognised:</p>
+            <ul>
+              <li>
+                <strong>Volume</strong> — a labelled NIfTI (<code>.nii/.nii.gz</code>) plus a label
+                table. Tables can be BIDS <code>dseg.tsv</code>, CSV, FreeSurfer LUT, ITK-SNAP,
+                FSL XML, a Connectome Workbench list, or JSON. A volume with no table still opens,
+                with regions named by number.
+              </li>
+              <li>
+                <strong>Surface</strong> — a CIFTI <code>.dlabel.nii</code> or GIFTI
+                <code>.label.gii</code>. These carry their own colours and names; geometry comes
+                from bundled fs_LR 32k surfaces, or drop your own <code>.surf.gii</code> to override.
+              </li>
+            </ul>
+            <p>No data of your own? Press <em>Load AAL demo</em>.</p>
+          </section>
+
+          <section>
+            <h3>2 · The two views</h3>
+            <p>
+              <strong>Volume</strong> shows three orthogonal slices above a 3D render; the toolbar
+              switches layout, atlas opacity, the anatomical template, and a label offset for tables
+              that are off by one. <strong>Surface</strong> shows the four-panel figure
+              (left/right × lateral/medial) with inflated or midthickness geometry, a dark or light
+              background, a shared zoom, and angle/size resets.
+            </p>
+          </section>
+
+          <section>
+            <h3>3 · Find and highlight regions</h3>
+            <ul>
+              <li><strong>Search</strong> filters the list by name, abbreviation, or label value.</li>
+              <li><strong>Tick</strong> regions to select them; <em>Isolate selection</em> hides
+                everything else.</li>
+              <li>In the volume view, clicking a row centres the crosshair on that region; on the
+                surface it toggles the selection.</li>
+              <li>Click a region's swatch to recolour it, and click anywhere in the brain to identify
+                what is under the cursor.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>4 · Region values → heatmap</h3>
+            <p>
+              With a parcellation loaded, use <em>Load region values…</em> (or drop a data file) to
+              colour regions by a per-region number — an activation, a hierarchy level, any measure.
+              The file can be:
+            </p>
+            <ul>
+              <li><code>name,value</code> — matched by region name;</li>
+              <li><code>index,value</code> — matched by label value;</li>
+              <li>one value per line — assigned in ascending label order (positional; it warns).</li>
+            </ul>
+            <p>
+              A colormap is chosen automatically — diverging and centred on zero for signed data,
+              sequential otherwise — and the <strong>colourbar</strong> under the view shows the
+              value-to-colour mapping. Change the colormap, <em>Reverse</em> it, toggle
+              <em>Centre on 0</em>, or set the range by hand. <em>Clear values</em> returns to the
+              categorical colours.
+            </p>
+          </section>
+
+          <section>
+            <h3>5 · Export figures</h3>
+            <p>
+              <em>Save PNG</em> renders at 2–8× the on-screen size — real resolution, not an
+              upscale. In heatmap mode the colourbar is drawn into the image, so the figure is
+              self-contained. For a surface figure, set the background to <em>Light</em> first. The
+              export is raster (PNG); SVG/PDF is not available from the browser.
+            </p>
+          </section>
+
+          <p class="help-foot">
+            Source and documentation:
+            <a href="https://github.com/payman21/brain-atlas-explorer" target="_blank" rel="noopener">
+              github.com/payman21/brain-atlas-explorer</a>.
+          </p>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="/src/main.ts"></script>

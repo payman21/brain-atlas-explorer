@@ -1,5 +1,7 @@
 # Brain Atlas Explorer
 
+**Live app: https://brain-atlas-explorer.pages.dev/**
+
 Open a parcellation in the browser and explore it: search regions by name,
 select several at once, recolour them, isolate them from the rest, and click to
 identify what is under the cursor.
@@ -78,9 +80,9 @@ Cividis) and diverging (Red–Blue, Cool–Warm, Red–Yellow–Blue) — and **
 flips any of them end for end, so Red–Blue becomes Blue–Red without a separate
 entry. When the data span zero, a diverging map centred on zero is chosen
 automatically, so red/blue reads as sign rather than above/below the mean;
-otherwise a sequential map is used. The colourbar sits under the view, the range
-is editable (with **Auto** to reset), and **Save PNG** captures the heatmap and
-colourbar-free brains just as it does the categorical view.
+otherwise a sequential map is used. The colourbar sits under the view — labelled
+with the value range and midpoint — and is drawn into the exported PNG too, so a
+heatmap figure is self-contained. The range is editable (with **Auto** to reset).
 
 ## Exporting images
 
