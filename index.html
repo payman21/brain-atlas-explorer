@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brain Atlas Explorer</title>
+  </head>
+  <body>
+    <div id="app">
+      <aside class="panel">
+        <header class="panel-head">
+          <h1>Brain Atlas Explorer</h1>
+          <p class="subtitle" id="atlas-name">No parcellation loaded</p>
+        </header>
+
+        <section class="ingest" id="dropzone">
+          <p class="ingest-hint">
+            Drop a <strong>volume</strong> (labelled NIfTI + label table)<br />
+            or a <strong>surface</strong> (.dlabel.nii or .label.gii)
+          </p>
+          <div class="ingest-actions">
+            <label class="button">
+              Choose files
+              <input type="file" id="file-input" multiple accept=".nii,.gz,.tsv,.csv,.txt,.json,.xml,.lut,.label" hidden />
+            </label>
+            <button class="button ghost" id="load-demo">Load AAL demo</button>
+          </div>
+          <p class="ingest-formats">
+            NIfTI + dseg.tsv / LUT / ITK-SNAP / FSL XML / JSON<br />
+            CIFTI .dlabel.nii &middot; GIFTI .label.gii
+          </p>
+        </section>
+
+        <div class="messages" id="messages"></div>
+
+        <section class="controls" id="region-controls" hidden>
+          <input type="search" id="search" placeholder="Search regions…" autocomplete="off" />
+          <div class="control-row">
+            <button class="chip" id="select-all">Select all</button>
+            <button class="chip" id="select-none">Clear</button>
+            <label class="chip toggle">
+              <input type="checkbox" id="isolate" />
+              Isolate selection
+            </label>
+          </div>
+          <div class="control-row">
+            <label class="chip" id="load-values-btn">
+              Load region values…
+              <input type="file" id="values-input" accept=".csv,.tsv,.txt,.json" hidden />
+            </label>
+            <button class="chip" id="clear-values" hidden>Clear values</button>
+          </div>
+          <p class="count" id="region-count"></p>
+        </section>
+
+        <ul class="region-list" id="region-list"></ul>
+      </aside>
+
+      <main class="stage">
+        <!-- Volumetric path: three orthogonal slices in a row, 3D render below. -->
+        <div class="viewport" id="volume-viewport">
+          <div class="slice-pane" id="slice-pane"><canvas id="gl"></canvas></div>
+          <div class="render-pane" id="render-pane"><canvas id="gl-render"></canvas></div>
+        </div>
+
+        <!-- Surface path: one panel per hemisphere and view, no slices. -->
+        <div class="surface-grid" id="surface-grid" hidden></div>
+
+        <div class="toolbar">
+          <div class="tool-group volume-only">
+            <label for="layout">Layout</label>
+            <select id="layout">
+              <option value="multiplanar">Multiplanar</option>
+              <option value="axial">Axial</option>
+              <option value="coronal">Coronal</option>
+              <option value="sagittal">Sagittal</option>
+              <option value="render">3D render</option>
+            </select>
+          </div>
+
+          <div class="tool-group volume-only">
+            <label for="opacity">Atlas opacity</label>
+            <input type="range" id="opacity" min="0" max="100" value="75" />
+          </div>
+
+          <div class="tool-group volume-only">
+            <label for="offset">Label offset</label>
+            <select id="offset">
+              <option value="-1">&minus;1</option>
+              <option value="0" selected>0</option>
+              <option value="1">+1</option>
+            </select>
+          </div>
+
+          <div class="tool-group inline volume-only">
+            <label class="checkbox"><input type="checkbox" id="show-template" checked /> Template</label>
+            <label class="checkbox"><input type="checkbox" id="show-crosshair" checked /> Crosshair</label>
+          </div>
+
+          <div class="tool-group surface-only">
+            <label for="surface-style">Surface</label>
+            <select id="surface-style">
+              <option value="inflated" selected>Inflated</option>
+              <option value="midthickness">Midthickness</option>
+            </select>
+          </div>
+
+          <div class="tool-group surface-only">
+            <label for="surface-background">Background</label>
+            <select id="surface-background">
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+
+          <div class="tool-group surface-only">
+            <label for="surface-zoom">Zoom</label>
+            <input type="range" id="surface-zoom" min="0.5" max="3" step="0.05" value="1" />
+            <button class="chip" id="reset-zoom">Reset size</button>
+          </div>
+
+          <div class="tool-group surface-only">
+            <button class="chip" id="reset-views">Reset angles</button>
+          </div>
+
+          <div class="tool-group scalar-group" id="scalar-group" hidden>
+            <label for="colormap">Heatmap</label>
+            <select id="colormap"></select>
+            <label class="checkbox" id="reverse-wrap"><input type="checkbox" id="reverse" /> Reverse</label>
+            <label class="checkbox" id="symmetric-wrap"><input type="checkbox" id="symmetric" /> Centre on 0</label>
+            <input type="number" id="range-min" class="range-input" step="any" title="Minimum" />
+            <input type="number" id="range-max" class="range-input" step="any" title="Maximum" />
+            <button class="chip" id="range-auto">Auto</button>
+          </div>
+
+          <div class="tool-group export-group">
+            <label for="export-scale">Export</label>
+            <select id="export-scale">
+              <option value="2">2&times;</option>
+              <option value="4" selected>4&times;</option>
+              <option value="8">8&times;</option>
+            </select>
+            <button class="chip" id="export-png">Save PNG</button>
+          </div>
+        </div>
+
+        <div class="readout" id="readout">
+          <div class="colorbar" id="colorbar" hidden>
+            <span class="colorbar-min" id="colorbar-min"></span>
+            <span class="colorbar-gradient" id="colorbar-gradient"></span>
+            <span class="colorbar-max" id="colorbar-max"></span>
+          </div>
+          <div class="readout-body" id="readout-body">
+            <span class="readout-empty">Click the brain to identify a region.</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

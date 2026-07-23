@@ -1,0 +1,22 @@
+# Cloudflare Pages / Netlify cache rules.
+# Copied verbatim into the build output (dist/) by Vite, since it lives in public/.
+
+# Vite fingerprints these filenames on every build, so they can be cached
+# forever — a content change produces a new filename.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Reference brains and surfaces keep stable names but never change their
+# contents, so a long cache is safe and turns repeat visits near-instant.
+/templates/*
+  Cache-Control: public, max-age=31536000
+/surfaces/*
+  Cache-Control: public, max-age=31536000
+/samples/*
+  Cache-Control: public, max-age=86400
+
+# index.html must stay fresh so new deploys are picked up immediately.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate

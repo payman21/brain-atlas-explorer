@@ -1,0 +1,551 @@
+:root {
+  --bg: #0b0d12;
+  --panel: #12151d;
+  --panel-2: #1a1e29;
+  --line: #262b38;
+  --text: #e6e9f0;
+  --muted: #8d95a8;
+  --accent: #ffd23f;
+  --danger: #ff8a7a;
+  --ok: #7ee0a8;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, sans-serif;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ---------- side panel ---------- */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+}
+
+.panel-head {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-head h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.ingest {
+  margin: 14px;
+  padding: 16px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.ingest.dragover {
+  border-color: var(--accent);
+  background: rgba(255, 210, 63, 0.07);
+}
+
+.ingest-hint {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.ingest-hint strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.ingest-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.ingest-formats {
+  margin: 12px 0 0;
+  font-size: 10.5px;
+  color: #6b7285;
+  letter-spacing: 0.02em;
+}
+
+.button {
+  display: inline-block;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 12px;
+  color: #12151d;
+  background: var(--accent);
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.button.ghost {
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+}
+
+.button:hover {
+  filter: brightness(1.1);
+}
+
+/* ---------- messages ---------- */
+
+.messages:not(:empty) {
+  margin: 0 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.message {
+  padding: 9px 11px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  border-radius: 7px;
+  border-left: 2px solid;
+}
+
+.message.error {
+  color: var(--danger);
+  background: rgba(255, 138, 122, 0.08);
+  border-color: var(--danger);
+}
+
+.message.warn {
+  color: #ffd9a0;
+  background: rgba(255, 200, 120, 0.07);
+  border-color: #d8a860;
+}
+
+.message.info {
+  color: var(--ok);
+  background: rgba(126, 224, 168, 0.07);
+  border-color: var(--ok);
+}
+
+.message ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+}
+
+/* ---------- controls ---------- */
+
+.controls {
+  padding: 0 14px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+#search {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+#search:focus {
+  outline: 1px solid var(--accent);
+}
+
+.control-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.chip {
+  padding: 5px 9px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chip:hover {
+  color: var(--text);
+}
+
+.chip.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.count {
+  margin: 9px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---------- region list ---------- */
+
+.region-list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 6px 8px 20px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.region {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 7px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.region:hover {
+  background: var(--panel-2);
+}
+
+.region.selected {
+  background: rgba(255, 210, 63, 0.09);
+}
+
+.region input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.region input[type="color"] {
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.region input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 1px;
+}
+
+.region input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+.region-name {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.region-name.absent {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.region-meta {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-list {
+  padding: 20px 10px;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---------- stage ---------- */
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  /* Both are needed: as a grid item the stage defaults to min-height:auto and
+     would otherwise grow to fit the canvases instead of bounding them. */
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Slices above, 3D render below. The render pane is hidden for single-slice
+   layouts, where the slice pane takes the whole area. */
+.viewport {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The slice row's three square tiles are wider than tall, so the slice pane is
+   given less height than the render below it — otherwise the row wastes space
+   on the right. */
+.slice-pane {
+  flex: 2 1 0;
+  min-height: 0;
+}
+
+.render-pane {
+  flex: 3 1 0;
+  min-height: 0;
+  border-top: 1px solid var(--line);
+}
+
+/* An author `display` declaration outranks the UA `[hidden] { display: none }`
+   rule, so every pane that sets one has to opt back out explicitly. */
+.viewport[hidden],
+.slice-pane[hidden],
+.render-pane[hidden],
+.surface-grid[hidden] {
+  display: none;
+}
+
+.viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- surface path ---------- */
+
+.surface-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  /* minmax(0, 1fr) rather than 1fr: a canvas carries an intrinsic size, and a
+     bare 1fr track floors at that content size, letting one row starve another
+     when the panels are rebuilt. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg);
+}
+
+.surface-grid.light {
+  background: #e7e9ee;
+}
+
+.surface-panel {
+  position: relative;
+  min-height: 0;
+  min-width: 0;
+}
+
+.surface-panel canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.surface-caption {
+  position: absolute;
+  left: 9px;
+  bottom: 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.surface-grid.light .surface-caption {
+  color: #5a6070;
+}
+
+/* Toolbar groups appear only in the path they belong to. */
+.stage[data-mode='volume'] .surface-only,
+.stage[data-mode='surface'] .volume-only {
+  display: none;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+  padding: 9px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.tool-group.inline {
+  gap: 14px;
+}
+
+.tool-group select {
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.tool-group input[type="range"] {
+  width: 110px;
+  accent-color: var(--accent);
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.checkbox input {
+  accent-color: var(--accent);
+}
+
+.readout {
+  padding: 9px 16px;
+  font-size: 12px;
+  background: var(--panel-2);
+  border-top: 1px solid var(--line);
+  min-height: 37px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.readout-body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.readout-empty {
+  color: var(--muted);
+}
+
+/* ---------- heatmap colourbar ---------- */
+
+.colorbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.colorbar[hidden] {
+  display: none;
+}
+
+.colorbar-gradient {
+  flex: 1;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+}
+
+.colorbar-min {
+  min-width: 44px;
+  text-align: right;
+}
+
+.colorbar-max {
+  min-width: 44px;
+}
+
+.range-input {
+  width: 60px;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.scalar-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.readout-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.readout-name {
+  font-weight: 600;
+}
+
+.readout-coords {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+}
+
+/* Export and heatmap controls apply to both paths, so they must survive the
+   mode-based hiding — but still collapse when their own [hidden] is set. */
+.stage[data-mode='volume'] .export-group,
+.stage[data-mode='surface'] .export-group,
+.stage[data-mode='volume'] .scalar-group,
+.stage[data-mode='surface'] .scalar-group {
+  display: flex;
+}
+
+.tool-group[hidden] {
+  display: none !important;
+}
+
+.chip[disabled] {
+  opacity: 0.6;
+  cursor: default;
+}
