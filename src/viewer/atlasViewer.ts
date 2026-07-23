@@ -40,6 +40,7 @@ export class AtlasViewer {
   private atlasLoaded = false
   private voxelCounts = new Map<number, number>()
   private centroids = new Map<number, [number, number, number]>()
+  private backgroundDark = true
 
   private constructor() {
     const shared = {
@@ -179,6 +180,26 @@ export class AtlasViewer {
     for (const nv of this.panes) if (nv.volumes[0]) nv.setOpacity(0, visible ? 1 : 0)
   }
 
+  /** Whether the current background is dark, so a legend can pick its ink. */
+  get isDark(): boolean {
+    return this.backgroundDark
+  }
+
+  /**
+   * Swap the background — light for figures, dark for screen. This colours the
+   * 3D render and the canvas surround. Slice tiles keep their black air region,
+   * as slice montages conventionally do in every viewer, so light mode is most
+   * useful with the 3D-render layout or the surface view.
+   */
+  setBackground(mode: 'dark' | 'light'): void {
+    this.backgroundDark = mode === 'dark'
+    const color: [number, number, number, number] = mode === 'light' ? [1, 1, 1, 1] : [0.05, 0.06, 0.09, 1]
+    for (const nv of this.panes) {
+      nv.opts.backColor = color
+      nv.drawScene()
+    }
+  }
+
   /**
    * Which panes are shown, and how the slice pane is arranged.
    *
@@ -226,7 +247,7 @@ export class AtlasViewer {
     const ctx = sheet.getContext('2d')
     if (!ctx) return null
 
-    ctx.fillStyle = '#0d1017'
+    ctx.fillStyle = this.backgroundDark ? '#0d1017' : '#ffffff'
     ctx.fillRect(0, 0, sheet.width, sheet.height)
     let y = 0
     for (const tile of tiles) {

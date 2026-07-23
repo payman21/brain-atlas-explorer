@@ -732,7 +732,9 @@ body {
 .stage[data-mode='volume'] .export-group,
 .stage[data-mode='surface'] .export-group,
 .stage[data-mode='volume'] .scalar-group,
-.stage[data-mode='surface'] .scalar-group {
+.stage[data-mode='surface'] .scalar-group,
+.stage[data-mode='volume'] .background-group,
+.stage[data-mode='surface'] .background-group {
   display: flex;
 }
 

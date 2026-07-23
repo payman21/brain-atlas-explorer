@@ -276,6 +276,7 @@ async function ingestVolume(
 
   if (volume) {
     volumeValues = await viewer.loadAtlas(volume, volumeImage ?? undefined)
+    viewer.setBackground(currentBackground())
     // For a .hdr/.img pair, name the atlas after the shared basename.
     const name = volumeImage ? volume.name.replace(/\.hdr$/i, '') : volume.name
     store.update({ atlasName: name, mode: 'volume' })
@@ -327,7 +328,7 @@ async function ingestSurface(
 
   const geometry = resolveGeometry(parcellation, userSurfaces, pending)
   const { missing } = await surfaceView.load(parcellation.surfaces, geometry)
-  surfaceView.setBackground(el<HTMLSelectElement>('surface-background').value as 'dark' | 'light')
+  surfaceView.setBackground(currentBackground())
 
   if (missing.length) {
     pending.push({
@@ -514,8 +515,15 @@ el<HTMLSelectElement>('surface-style').addEventListener('change', () => {
   if (lastSurfaceFiles.length > 0) void ingest(lastSurfaceFiles)
 })
 
-el<HTMLSelectElement>('surface-background').addEventListener('change', (e) => {
-  surfaceView.setBackground((e.target as HTMLSelectElement).value as 'dark' | 'light')
+// Background applies to whichever path is active; set both so the choice
+// persists when switching between the volume and surface views.
+function currentBackground(): 'dark' | 'light' {
+  return el<HTMLSelectElement>('background-select').value as 'dark' | 'light'
+}
+el<HTMLSelectElement>('background-select').addEventListener('change', () => {
+  const mode = currentBackground()
+  surfaceView.setBackground(mode)
+  viewer.setBackground(mode)
 })
 
 el('reset-views').addEventListener('click', () => surfaceView.resetViews())
@@ -617,8 +625,7 @@ function buildLegend(): Legend | null {
     max: heatmap.max,
     mid: (heatmap.min + heatmap.max) / 2,
     title: scalar.name,
-    // The surface path can render on white; the volume sheet is always dark.
-    dark: mode === 'surface' ? surfaceView.isDark : true,
+    dark: mode === 'surface' ? surfaceView.isDark : viewer.isDark,
   }
 }
 

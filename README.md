@@ -43,9 +43,10 @@ onto the window.
 ## What it does today
 
 - **Volumetric:** a labelled NIfTI over a bundled MNI152 template, in
-  multiplanar, single-slice, or 3D-render layouts. Click a region in the list to
-  centre the crosshair on it. Single-file (`.nii/.nii.gz`) and two-file
-  (`.hdr`+`.img`) NIfTI/Analyze are both accepted — drop both halves of a pair.
+  multiplanar, single-slice, or 3D-render layouts, on a dark or light
+  background. Click a region in the list to centre the crosshair on it.
+  Single-file (`.nii/.nii.gz`) and two-file (`.hdr`+`.img`) NIfTI/Analyze are
+  both accepted — drop both halves of a pair.
 - **Surface:** CIFTI or GIFTI cortical labels on fs_LR 32k surfaces, shown as
   the conventional four-panel figure, inflated or midthickness, on a dark or
   light background. A shared **Zoom** slider (and **Reset size**) keeps the four
