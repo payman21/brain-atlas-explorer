@@ -521,19 +521,10 @@ function currentBackground(): 'dark' | 'light' {
   return el<HTMLSelectElement>('background-select').value as 'dark' | 'light'
 }
 
-/**
- * Apply a background choice everywhere. In the volume path, light mode also
- * drops the anatomical template: NiiVue draws it as an opaque background layer,
- * so its out-of-brain air would frame every slice in black on a white sheet.
- * Hiding it puts the parcellation on clean white — the usual light-figure look.
- * The Template checkbox still works as a manual override afterwards.
- */
+/** Apply a background choice to whichever path is active. */
 function applyBackground(mode: 'dark' | 'light'): void {
   surfaceView.setBackground(mode)
   viewer.setBackground(mode)
-  const showTemplate = mode === 'dark'
-  viewer.setTemplateVisible(showTemplate)
-  el<HTMLInputElement>('show-template').checked = showTemplate
 }
 
 el<HTMLSelectElement>('background-select').addEventListener('change', () => applyBackground(currentBackground()))

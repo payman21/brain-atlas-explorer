@@ -23,6 +23,9 @@ const LAYOUTS: Record<LayoutName, SLICE_TYPE> = {
 /** NIfTI intent code marking a volume as a discrete label map. */
 const NIFTI_INTENT_LABEL = 1002
 
+/** Greyscale template colormap for light mode: air (intensity 0) → white. */
+const ANAT_LIGHT = 'anatlight'
+
 /**
  * The volumetric path: a greyscale anatomical template at volume 0 and a
  * labelled parcellation at volume 1, viewed as orthogonal slices or a 3D
@@ -68,6 +71,14 @@ export class AtlasViewer {
     await viewer.render.attachToCanvas(renderCanvas)
     viewer.nv.setSliceType(SLICE_TYPE.MULTIPLANAR)
     viewer.render.setSliceType(SLICE_TYPE.RENDER)
+
+    // A greyscale ramp whose very first LUT slot is white. The template's air is
+    // exactly zero and lands on that slot, turning it white; every real tissue
+    // intensity (including dark CSF and ventricles) falls on the grey ramp, so
+    // the brain renders normally on a white background with no punched-out holes.
+    for (const nv of viewer.panes) {
+      nv.addColormap(ANAT_LIGHT, { R: [255, 0, 255], G: [255, 0, 255], B: [255, 0, 255], A: [255, 255, 255], I: [0, 1, 255] })
+    }
     return viewer
   }
 
@@ -186,16 +197,24 @@ export class AtlasViewer {
   }
 
   /**
-   * Swap the background — light for figures, dark for screen. Colours the 3D
-   * render and the canvas surround; the caller pairs this with hiding the
-   * template in light mode, since NiiVue draws the template as an opaque
-   * background layer whose air would otherwise frame each slice in black.
+   * Swap the background — light for figures, dark for screen.
+   *
+   * NiiVue draws the template as an opaque background layer, so its out-of-brain
+   * air always takes the colormap's lowest colour: black on the usual greyscale.
+   * On a dark canvas that air is invisible; on a light canvas it would frame
+   * every slice in black. Inverting the template's colormap in light mode maps
+   * air (intensity ~0) to opaque white — seamless with the white sheet — and
+   * shows the anatomy as a negative, a standard light-figure convention that
+   * makes coloured overlays read clearly. The atlas overlay is untouched.
    */
   setBackground(mode: 'dark' | 'light'): void {
     this.backgroundDark = mode === 'dark'
     const color: [number, number, number, number] = mode === 'light' ? [1, 1, 1, 1] : [0.05, 0.06, 0.09, 1]
     for (const nv of this.panes) {
       nv.opts.backColor = color
+      const template = nv.volumes[0]
+      if (template) nv.setColormap(template.id, mode === 'light' ? ANAT_LIGHT : 'gray')
+      nv.updateGLVolume()
       nv.drawScene()
     }
   }
