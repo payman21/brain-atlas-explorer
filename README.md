@@ -145,10 +145,10 @@ bundles fs_LR 32k surfaces in `public/surfaces/` and matches them to labels by
 vertex count (32492). Drop your own `.surf.gii` alongside the labels to override
 them, which is also how you view any other mesh resolution.
 
-The bundled meshes come from one HCP subject's `MNINonLinear/fsaverage_LR32k`
-directory, not the group average. Topology is identical, so labels map
-vertex-for-vertex, but the shape is one person's brain — swap in group-average
-surfaces before using a render in a paper.
+The bundled meshes are the openly redistributable **fs_LR 32k group-average**
+surfaces from [TemplateFlow](https://www.templateflow.org) (`tpl-fsLR`,
+`den-32k`, inflated and midthickness). They are a shared template, not any
+individual's brain, so they are safe to publish and appropriate for figures.
 
 ## Architecture
 
